@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ECam — Register</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="login-page">
+
+<div class="login-background">
+  <div class="glow glow-one"></div>
+  <div class="glow glow-two"></div>
+</div>
+
+<main class="login-shell">
+
+  <section class="login-brand">
+    <div class="brand-icon">E</div>
+    <h1>ECam</h1>
+    <p>Capture more. Create better.</p>
+  </section>
+
+  <section class="login-card">
+
+    
+
+    <h2>Create your account</h2>
+    <p class="login-subtitle">
+      Save and access your ECam pictures anytime.
+    </p>
+
+    <form id="registerForm">
+
+      <label for="fullName">Full Name</label>
+      <input
+        id="fullName"
+        name="fullName"
+        type="text"
+        placeholder="Enter your full name"
+        autocomplete="name"
+        required
+      >
+
+      <label for="username">Username</label>
+      <input
+        id="username"
+        name="username"
+        type="text"
+        placeholder="Choose a username"
+        minlength="3"
+        maxlength="50"
+        autocomplete="username"
+        required
+      >
+
+      <label for="gmail">Gmail</label>
+      <input
+        id="gmail"
+        name="gmail"
+        type="email"
+        placeholder="you@gmail.com"
+        autocomplete="email"
+        required
+      >
+
+      <label for="password">Password</label>
+
+      <div class="password-wrap">
+        <input
+          id="password"
+          name="password"
+          type="password"
+          placeholder="Create a password"
+          minlength="6"
+          autocomplete="new-password"
+          required
+        >
+
+        <button type="button" id="togglePassword">
+          Show
+        </button>
+      </div>
+
+      <label for="confirmPassword">Confirm Password</label>
+
+      <div class="password-wrap">
+        <input
+          id="confirmPassword"
+          name="confirmPassword"
+          type="password"
+          placeholder="Repeat your password"
+          minlength="6"
+          autocomplete="new-password"
+          required
+        >
+
+        <button type="button" id="toggleConfirmPassword">
+          Show
+        </button>
+      </div>
+
+      <button class="login-button" type="submit" id="registerButton">
+        Create Account <span>→</span>
+      </button>
+
+      <p id="registerMessage" class="login-message"></p>
+
+    </form>
+
+    <div class="back-login">
+      <span>Already have an account?</span>
+      <a href="index.html">Log in</a>
+    </div>
+
+  </section>
+
+  <footer>ECam Camera Studio</footer>
+
+</main>
+
+<script>
+
+const form = document.getElementById("registerForm");
+const msg = document.getElementById("registerMessage");
+const registerButton = document.getElementById("registerButton");
+
+const password = document.getElementById("password");
+const confirmPassword = document.getElementById("confirmPassword");
+
+const togglePassword = document.getElementById("togglePassword");
+const toggleConfirmPassword = document.getElementById("toggleConfirmPassword");
+
+togglePassword.addEventListener("click", () => {
+
+  if (password.type === "password") {
+    password.type = "text";
+    togglePassword.textContent = "Hide";
+  } else {
+    password.type = "password";
+    togglePassword.textContent = "Show";
+  }
+
+});
+
+toggleConfirmPassword.addEventListener("click", () => {
+
+  if (confirmPassword.type === "password") {
+    confirmPassword.type = "text";
+    toggleConfirmPassword.textContent = "Hide";
+  } else {
+    confirmPassword.type = "password";
+    toggleConfirmPassword.textContent = "Show";
+  }
+
+});
+
+function showMessage(message, type) {
+
+  msg.textContent = message;
+  msg.className = "login-message " + type;
+
+}
+
+form.addEventListener("submit", async (event) => {
+
+  event.preventDefault();
+
+  const fullName = document.getElementById("fullName").value.trim();
+  const username = document.getElementById("username").value.trim().toLowerCase();
+  const gmail = document.getElementById("gmail").value.trim().toLowerCase();
+  const passwordValue = password.value;
+  const confirmValue = confirmPassword.value;
+
+  if (!fullName || !username || !gmail || !passwordValue || !confirmValue) {
+    showMessage("Please complete all fields.", "error");
+    return;
+  }
+
+  if (username.length < 3) {
+    showMessage("Username must be at least 3 characters.", "error");
+    return;
+  }
+
+  if (!/^[a-zA-Z0-9_]{3,50}$/.test(username)) {
+    showMessage(
+      "Username may only contain letters, numbers, and underscores.",
+      "error"
+    );
+    return;
+  }
+
+  if (!gmail.endsWith("@gmail.com")) {
+    showMessage("Please use a Gmail address.", "error");
+    return;
+  }
+
+  if (passwordValue.length < 6) {
+    showMessage("Password must be at least 6 characters.", "error");
+    return;
+  }
+
+  if (passwordValue !== confirmValue) {
+    showMessage("Passwords do not match.", "error");
+    return;
+  }
+
+  registerButton.disabled = true;
+  registerButton.innerHTML = "Creating Account...";
+
+  const formData = new FormData();
+
+  formData.append("fullName", fullName);
+  formData.append("username", username);
+  formData.append("gmail", gmail);
+  formData.append("password", passwordValue);
+  formData.append("confirmPassword", confirmValue);
+
+  try {
+
+    const response = await fetch("api/register.php", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+
+      showMessage(
+        data.message || "Registration failed.",
+        "error"
+      );
+
+      registerButton.disabled = false;
+      registerButton.innerHTML = 'Create Account <span>→</span>';
+
+      return;
+    }
+
+    showMessage(
+      "Account created successfully. Redirecting to login...",
+      "success"
+    );
+
+    form.reset();
+
+    setTimeout(() => {
+      window.location.href = "index.html";
+    }, 1200);
+
+  } catch (error) {
+
+    showMessage(
+      "Unable to connect to the server. Please make sure XAMPP and Apache are running.",
+      "error"
+    );
+
+    registerButton.disabled = false;
+    registerButton.innerHTML = 'Create Account <span>→</span>';
+
+  }
+
+});
+
+</script>
+
+</body>
+</html>
